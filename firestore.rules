@@ -1,0 +1,179 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'userId', 'displayName', 'preferredLanguage', 'explanationPace',
+          'difficultyLevel', 'voiceEnabled', 'preferredVoice', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'userId', 'displayName', 'preferredLanguage', 'explanationPace',
+          'difficultyLevel', 'voiceEnabled', 'preferredVoice', 'createdAt', 'updatedAt'
+        ]) &&
+        data.userId is string && data.userId == userId &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+        data.preferredLanguage in ['Auto', 'English', 'Hindi', 'Bhojpuri', 'Nepali', 'Maithili', 'Mixed'] &&
+        data.explanationPace in ['Gentle', 'Balanced', 'Concise'] &&
+        data.difficultyLevel in ['Beginner', 'Intermediate', 'Advanced'] &&
+        data.voiceEnabled is bool &&
+        data.preferredVoice is string && data.preferredVoice.size() >= 1 && data.preferredVoice.size() <= 40 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidLessonRecord(data, userId) {
+      return data.keys().hasAll([
+          'userId', 'title', 'subject', 'level', 'language', 'status',
+          'summary', 'currentStep', 'formulas', 'unresolvedQuestions',
+          'boardEvents', 'studentStrokes', 'recentTurns', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'userId', 'title', 'subject', 'level', 'language', 'status',
+          'summary', 'currentStep', 'formulas', 'unresolvedQuestions',
+          'boardEvents', 'studentStrokes', 'recentTurns', 'createdAt', 'updatedAt'
+        ]) &&
+        data.userId is string && data.userId == userId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+        data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 60 &&
+        data.level in ['Beginner', 'Intermediate', 'Advanced'] &&
+        data.language is string && data.language.size() >= 1 && data.language.size() <= 40 &&
+        data.status in ['active', 'paused', 'completed'] &&
+        data.summary is string && data.summary.size() <= 3000 &&
+        data.currentStep is string && data.currentStep.size() <= 600 &&
+        data.formulas is list && data.formulas.size() <= 40 &&
+        (data.formulas.size() == 0 || data.formulas[0] is string) &&
+        data.unresolvedQuestions is list && data.unresolvedQuestions.size() <= 20 &&
+        (data.unresolvedQuestions.size() == 0 || data.unresolvedQuestions[0] is string) &&
+        data.boardEvents is list && data.boardEvents.size() <= 120 &&
+        (data.boardEvents.size() == 0 || data.boardEvents[0] is map) &&
+        data.studentStrokes is list && data.studentStrokes.size() <= 200 &&
+        (data.studentStrokes.size() == 0 || data.studentStrokes[0] is map) &&
+        data.recentTurns is list && data.recentTurns.size() <= 40 &&
+        (data.recentTurns.size() == 0 || data.recentTurns[0] is map) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidTopicProgress(data, userId) {
+      return data.keys().hasAll([
+          'userId', 'subject', 'topic', 'masteryPercent',
+          'quizzesCompleted', 'quizzesCorrect', 'strengthNote',
+          'weakAreaNote', 'lastQuizQuestion', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'userId', 'subject', 'topic', 'masteryPercent',
+          'quizzesCompleted', 'quizzesCorrect', 'strengthNote',
+          'weakAreaNote', 'lastQuizQuestion', 'createdAt', 'updatedAt'
+        ]) &&
+        data.userId is string && data.userId == userId &&
+        data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 60 &&
+        data.topic is string && data.topic.size() >= 1 && data.topic.size() <= 120 &&
+        data.masteryPercent is int && data.masteryPercent >= 0 && data.masteryPercent <= 100 &&
+        data.quizzesCompleted is int && data.quizzesCompleted >= 0 && data.quizzesCompleted <= 100000 &&
+        data.quizzesCorrect is int && data.quizzesCorrect >= 0 && data.quizzesCorrect <= data.quizzesCompleted &&
+        data.strengthNote is string && data.strengthNote.size() <= 400 &&
+        data.weakAreaNote is string && data.weakAreaNote.size() <= 400 &&
+        data.lastQuizQuestion is string && data.lastQuizQuestion.size() <= 500 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserProfile(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'preferredLanguage', 'explanationPace',
+          'difficultyLevel', 'voiceEnabled', 'preferredVoice', 'updatedAt'
+        ]);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /lessons/{lessonId} {
+        allow get: if isOwner(userId) && isValidId(lessonId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(lessonId) &&
+          isValidLessonRecord(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+          isValidId(lessonId) &&
+          isValidLessonRecord(incoming(), userId) &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'subject', 'level', 'language', 'status',
+            'summary', 'currentStep', 'formulas', 'unresolvedQuestions',
+            'boardEvents', 'studentStrokes', 'recentTurns', 'updatedAt'
+          ]);
+
+        allow delete: if isOwner(userId) && isValidId(lessonId);
+      }
+
+      match /progress/{progressId} {
+        allow get: if isOwner(userId) && isValidId(progressId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(progressId) &&
+          isValidTopicProgress(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+          isValidId(progressId) &&
+          isValidTopicProgress(incoming(), userId) &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'subject', 'topic', 'masteryPercent', 'quizzesCompleted',
+            'quizzesCorrect', 'strengthNote', 'weakAreaNote',
+            'lastQuizQuestion', 'updatedAt'
+          ]);
+
+        allow delete: if isOwner(userId) && isValidId(progressId);
+      }
+    }
+  }
+}

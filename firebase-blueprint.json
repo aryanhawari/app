@@ -1,0 +1,135 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated student profile and GURIVA teaching preferences.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "Student display name" },
+        "preferredLanguage": {
+          "type": "string",
+          "enum": ["Auto", "English", "Hindi", "Bhojpuri", "Nepali", "Maithili", "Mixed"],
+          "description": "Preferred teaching language"
+        },
+        "explanationPace": {
+          "type": "string",
+          "enum": ["Gentle", "Balanced", "Concise"],
+          "description": "Teacher explanation pace"
+        },
+        "difficultyLevel": {
+          "type": "string",
+          "enum": ["Beginner", "Intermediate", "Advanced"],
+          "description": "Default learning level"
+        },
+        "voiceEnabled": { "type": "boolean", "description": "Whether Gemini teacher audio output is enabled" },
+        "preferredVoice": { "type": "string", "description": "Preferred Gemini voice label" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp on creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp on update" }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "preferredLanguage",
+        "explanationPace",
+        "difficultyLevel",
+        "voiceEnabled",
+        "preferredVoice",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LessonRecord": {
+      "title": "LessonRecord",
+      "description": "Saved classroom lesson with compact summary, key formulas, recent turns, and board state.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID" },
+        "title": { "type": "string", "description": "Lesson title or initial question" },
+        "subject": { "type": "string", "description": "Academic subject" },
+        "level": {
+          "type": "string",
+          "enum": ["Beginner", "Intermediate", "Advanced"],
+          "description": "Lesson difficulty level"
+        },
+        "language": { "type": "string", "description": "Active lesson language" },
+        "status": {
+          "type": "string",
+          "enum": ["active", "paused", "completed"],
+          "description": "Lesson lifecycle status"
+        },
+        "summary": { "type": "string", "description": "Compact lesson memory summary" },
+        "currentStep": { "type": "string", "description": "Current teaching step label" },
+        "formulas": { "type": "array", "description": "Extracted formulas and key notes" },
+        "unresolvedQuestions": { "type": "array", "description": "Pending clarification or open questions" },
+        "boardEvents": { "type": "array", "description": "Completed teacher board events" },
+        "studentStrokes": { "type": "array", "description": "Preserved student vector strokes" },
+        "recentTurns": { "type": "array", "description": "Compact recent dialogue turns for lesson resume" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server update timestamp" }
+      },
+      "required": [
+        "userId",
+        "title",
+        "subject",
+        "level",
+        "language",
+        "status",
+        "summary",
+        "currentStep",
+        "formulas",
+        "unresolvedQuestions",
+        "boardEvents",
+        "studentStrokes",
+        "recentTurns",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TopicProgress": {
+      "title": "TopicProgress",
+      "description": "Student mastery, quiz stats, strengths, and weak topics per subject/topic.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID" },
+        "subject": { "type": "string", "description": "Subject name" },
+        "topic": { "type": "string", "description": "Topic name" },
+        "masteryPercent": { "type": "integer", "description": "0 to 100 mastery score" },
+        "quizzesCompleted": { "type": "integer", "description": "Total quizzes attempted" },
+        "quizzesCorrect": { "type": "integer", "description": "Total quizzes answered correctly" },
+        "strengthNote": { "type": "string", "description": "Identified student strength" },
+        "weakAreaNote": { "type": "string", "description": "Topic needing review" },
+        "lastQuizQuestion": { "type": "string", "description": "Latest check-for-understanding prompt" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server update timestamp" }
+      },
+      "required": [
+        "userId",
+        "subject",
+        "topic",
+        "masteryPercent",
+        "quizzesCompleted",
+        "quizzesCorrect",
+        "strengthNote",
+        "weakAreaNote",
+        "lastQuizQuestion",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Per-user settings and learning preferences"
+    },
+    "/users/{userId}/lessons/{lessonId}": {
+      "schema": { "$ref": "#/entities/LessonRecord" },
+      "description": "Per-user saved lessons, board state, formulas, and lesson memory"
+    },
+    "/users/{userId}/progress/{progressId}": {
+      "schema": { "$ref": "#/entities/TopicProgress" },
+      "description": "Per-user subject/topic mastery, strengths, weak areas, and quiz counts"
+    }
+  }
+}

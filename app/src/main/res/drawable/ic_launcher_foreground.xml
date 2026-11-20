@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Whiteboard rounded slate frame centered inside 66dp safe zone (21..87) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,30 L78,30 A4,4 0 0 1 82,34 L82,66 A4,4 0 0 1 78,70 L30,70 A4,4 0 0 1 26,66 L26,34 A4,4 0 0 1 30,30 Z" />
+    <!-- Inner board surface -->
+    <path
+        android:fillColor="#0F4C5C"
+        android:pathData="M32,35 L76,35 L76,65 L32,65 Z" />
+    <!-- Whiteboard tray/stand -->
+    <path
+        android:fillColor="#F4A261"
+        android:pathData="M36,73 L72,73 L72,77 L36,77 Z" />
+    <!-- Mathematical / teaching wave + geometric spark on board -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M37,54 C42,42 47,42 52,50 C57,58 62,54 67,43"
+        android:strokeColor="#F8FAFC"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.2" />
+    <!-- Golden teaching spark / stylus tip -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M69,39 L71,43 L75,45 L71,47 L69,51 L67,47 L63,45 L67,43 Z" />
+</vector>
